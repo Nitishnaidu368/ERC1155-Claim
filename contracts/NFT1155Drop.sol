@@ -71,7 +71,7 @@ contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
         require(PNDC_ERC1155(_collection).balanceOf(msg.sender, _tokenId) >= _amount);
         require(_claimee != msg.sender);
         require(_time > 0);
-        require(s_userClaims[_claimee].length <= 10);
+        require(s_userClaims[_claimee].length < 10);
 
         //needs approval
         PNDC_ERC1155(_collection).safeTransferFrom(
