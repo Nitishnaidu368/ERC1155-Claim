@@ -8,7 +8,7 @@ const hre = require("hardhat");
 
 async function main() {
   const NFT1155Drop = await hre.ethers.getContractFactory("NFT1155Drop");
-  const instance = await NFT1155Drop.deploy("0x7aa0a18f56CfBdBAf3dFF7A97BB56E32fdCC66e1", "0xc6127eA3089fAE66394864f9a370Df9dc7bA1CFC");
+  const instance = await NFT1155Drop.deploy("0xf02c627B3Ae533D488cb25F072e542ee7CCc1D10", "0xDf9CE7eCeC9388e6A71eeA2690EA5825B7b00ca1", "0x69015912AA33720b842dCD6aC059Ed623F28d9f7");
 
   await instance.deployed();
 

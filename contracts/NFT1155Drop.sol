@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.2;
-
+pragma solidity 0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "./LibShare.sol";
 import "./PNDC_ERC1155.sol";
 import "./TokenERC1155.sol";
@@ -12,7 +12,12 @@ interface TokenFactory1155 {
     function collectionToOwner(address) external returns (address);
 }
 
-contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
+contract NFT1155Drop is
+    ERC2771Context,
+    Ownable,
+    ERC1155Holder,
+    ReentrancyGuard
+{
     struct Claim {
         address moderator;
         address collection;
@@ -49,7 +54,11 @@ contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
     address public PNDC;
     address public Factory;
 
-    constructor(address _pndc, address _factory) {
+    constructor(
+        address _pndc,
+        address _factory,
+        address address_Forweder
+    ) ERC2771Context(address_Forweder) {
         PNDC = _pndc;
         Factory = _factory;
         s_moderators[msg.sender] = true;
@@ -68,7 +77,9 @@ contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
                 TokenFactory1155(Factory).collectionToOwner(_collection) !=
                 address(0)
         );
-        require(PNDC_ERC1155(_collection).balanceOf(msg.sender, _tokenId) >= _amount);
+        require(
+            PNDC_ERC1155(_collection).balanceOf(msg.sender, _tokenId) >= _amount
+        );
         require(_claimee != msg.sender);
         require(_time > 0);
         require(s_userClaims[_claimee].length <= 10);
@@ -101,61 +112,70 @@ contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
         );
     }
 
-    function claim() external payable nonReentrant{
-        uint256 m_totalClaims = s_userClaims[msg.sender].length;
+    function claim() external nonReentrant {
+        uint256 m_totalClaims = s_userClaims[_msgSender()].length;
         require(m_totalClaims != 0);
         uint256 totalPrice = 0;
         for (uint256 i = 0; i < m_totalClaims; ++i) {
-            if(block.timestamp <= s_userClaims[msg.sender][i].endTime) {
-                totalPrice += s_userClaims[msg.sender][i].pricePerToken * s_userClaims[msg.sender][i].amount;
+            if (block.timestamp <= s_userClaims[_msgSender()][i].endTime) {
+                totalPrice +=
+                    s_userClaims[_msgSender()][i].pricePerToken *
+                    s_userClaims[_msgSender()][i].amount;
             }
         }
-        require(msg.value == totalPrice);
+        // require(msg.value == totalPrice);
         for (uint256 i = 0; i < m_totalClaims; ++i) {
-            if (block.timestamp <= s_userClaims[msg.sender][i].endTime) {
+            if (block.timestamp <= s_userClaims[_msgSender()][i].endTime) {
                 (bool isSuccess, ) = payable(
-                    s_userClaims[msg.sender][i].moderator
-                ).call{value: (s_userClaims[msg.sender][i].pricePerToken * s_userClaims[msg.sender][i].amount)}("");
+                    s_userClaims[_msgSender()][i].moderator
+                ).call{
+                    value: (s_userClaims[_msgSender()][i].pricePerToken *
+                        s_userClaims[_msgSender()][i].amount)
+                }("");
                 require(isSuccess, "Transfer failed");
-                PNDC_ERC1155(s_userClaims[msg.sender][i].collection)
+                PNDC_ERC1155(s_userClaims[_msgSender()][i].collection)
                     .safeTransferFrom(
                         address(this),
-                        msg.sender,
-                        s_userClaims[msg.sender][i].tokenId,
-                        s_userClaims[msg.sender][i].amount,
+                        _msgSender(),
+                        s_userClaims[_msgSender()][i].tokenId,
+                        s_userClaims[_msgSender()][i].amount,
                         ""
                     );
                 emit TokensClaimed(
-                    msg.sender,
-                    s_userClaims[msg.sender][i].tokenId,
-                    s_userClaims[msg.sender][i].amount,
-                    s_userClaims[msg.sender][i].collection,
+                    _msgSender(),
+                    s_userClaims[_msgSender()][i].tokenId,
+                    s_userClaims[_msgSender()][i].amount,
+                    s_userClaims[_msgSender()][i].collection,
                     true,
-                    msg.sender
+                    _msgSender()
                 );
             } else {
-                PNDC_ERC1155(s_userClaims[msg.sender][i].collection)
+                PNDC_ERC1155(s_userClaims[_msgSender()][i].collection)
                     .safeTransferFrom(
                         address(this),
-                        s_userClaims[msg.sender][i].moderator,
-                        s_userClaims[msg.sender][i].tokenId,
-                        s_userClaims[msg.sender][i].amount,
+                        s_userClaims[_msgSender()][i].moderator,
+                        s_userClaims[_msgSender()][i].tokenId,
+                        s_userClaims[_msgSender()][i].amount,
                         ""
                     );
                 emit TokensClaimed(
-                    msg.sender,
-                    s_userClaims[msg.sender][i].tokenId,
-                    s_userClaims[msg.sender][i].amount,
-                    s_userClaims[msg.sender][i].collection,
+                    _msgSender(),
+                    s_userClaims[_msgSender()][i].tokenId,
+                    s_userClaims[_msgSender()][i].amount,
+                    s_userClaims[_msgSender()][i].collection,
                     false,
-                    s_userClaims[msg.sender][i].moderator
+                    s_userClaims[_msgSender()][i].moderator
                 );
             }
         }
-        delete s_userClaims[msg.sender];
+        delete s_userClaims[_msgSender()];
     }
 
-    function getClaims(address _claimee) external view returns(Claim[] memory claims) {
+    function getClaims(address _claimee)
+        external
+        view
+        returns (Claim[] memory claims)
+    {
         claims = s_userClaims[_claimee];
         return claims;
     }
@@ -176,5 +196,23 @@ contract NFT1155Drop is Ownable, ERC1155Holder, ReentrancyGuard {
 
     function changePNDC(address _pndc) external onlyOwner {
         PNDC = _pndc;
+    }
+
+    function _msgSender()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        sender = ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }

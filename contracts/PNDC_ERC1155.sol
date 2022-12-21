@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.2;
+pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -8,11 +8,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "./LibShare.sol";
 
 contract PNDC_ERC1155 is ERC1155, Ownable, ERC1155Supply {
-    
-    event RoyaltiesSetForTokenId(
-        uint256 tokenId,
-        LibShare.Share[] royalties
-    );
+    event RoyaltiesSetForTokenId(uint256 tokenId, LibShare.Share[] royalties);
 
     using Counters for Counters.Counter;
 
@@ -36,7 +32,7 @@ contract PNDC_ERC1155 is ERC1155, Ownable, ERC1155Supply {
         bytes memory data,
         string memory uri,
         LibShare.Share[] memory royalties
-    ) public returns(uint256){
+    ) public returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _setRoyaltiesByTokenId(tokenId, royalties);
         _tokenIdCounter.increment();

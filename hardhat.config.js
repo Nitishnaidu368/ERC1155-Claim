@@ -6,7 +6,16 @@ const pk = process.env.PK;
 const polygon = process.env.POLYGON_SCAN;
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.2",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.2",
+      },
+      {
+        version: "0.8.9",
+      },
+    ],
+  },
   networks: {
     mumbai: {
       url: "https://rpc-mumbai.maticvigil.com",
@@ -18,7 +27,7 @@ module.exports = {
       polygonMumbai: polygon,
     }
   },
-  paths : {
+  paths: {
     //artifacts: './frontend/src/artifacts'
   }
 };

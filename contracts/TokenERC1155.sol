@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.2;
+pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
@@ -25,7 +25,7 @@ contract TokenERC1155 is Ownable, ERC1155Supply {
         _setURI(newuri);
     }
 
-     function _setTokenUri(string memory _uri, uint256 _tokenId) private {
+    function _setTokenUri(string memory _uri, uint256 _tokenId) private {
         _uris[_tokenId] = _uri;
     }
 
